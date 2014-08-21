@@ -33,7 +33,7 @@ train <- train[,keep]
 names(train)
 ```
 
-We are now down to 59 variables from the original 160. The first 6 columns only contain subject id and timestamps and can also be removed.
+We are now down to 59 variables from the original 160. The first 6 columns only contain subject id and timestamps. Since these should be tied directly to each subject, we can remove these, as they would no make for good predictors. This will put us down to 53 variables.
 
 ```{r}
 train <- train[,-c(1:6)]
@@ -59,24 +59,31 @@ We can now fit our Random Forest model to the training set using cross-validatio
 
 ```{r, cache=TRUE}
 
-ctrl <- trainControl(method="cv", number=10)
+ctrl <- trainControl(method="cv", number=10, allowParallel = TRUE)
 
 set.seed(1234)
-modelFit <- train(classe ~ ., data=training, method="rf", trControl=ctrl, prox=TRUE)
+modelFit <- train(classe ~ ., data = training, method = "rf", trControl = ctrl)
 
 modelFit$finalModel
 ```
 
-From above we see the final model only used 27 of the 53 variables. The confusion matrix shows very low classification error. We can now apply our model to the test set and get out out of sample error.
+###Results
+
+The confusion matrix shows very low classification error, only a 0.7% out of bag error rate. We can now apply our model to the test set and get our out of sample error.
 
 ```{r}
-prediction <- predict(modelFit, newdata = training)
+prediction <- predict(modelFit, newdata = testing)
 
-(sum(prediction != testing$classe)/nrow(testing))*100
+(sum(prediction != testing$classe)/nrow(testing))*100 ## out of sample error calculation
 
 confusionMatrix(prediction, testing$classe)
 
 ```
 
+We can see that the out of sample error rate is only 0.68%, which is good enough for our purposes. Looking at the confusion matrix we see that the model had the most problems labeling class D (lowering the dumbbell halfway). It put a few instances as class C (raising the dumbbell halfway). This makes sense as the motions are similar, with the biggest differences being the direction (up or down) of the motion.
+
+In addition to our test dataset, a 20 row dataset was also provided for this project. When the model was applied to this small dataset and submitted for grading, it predicted the classe with 100% accuracy. The code is not provided, but the dataset can be found in the GitHub repo.
+
 ###Conclusion
 
+For the purposes of this report we used a very simplistic approach with the Random Forest learning method, using only a training and test set with 10 fold cross-validation. To improve our accuracy we may attempt to use a more robust model validation technique. Combining predictors may also be something to explore in future studies.
