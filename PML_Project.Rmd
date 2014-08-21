@@ -1,0 +1,39 @@
+##Practical Machine Learning: Human Activity Recognition
+
+###Introduction
+Devices such as the Fitbit, Jawbone Up, and Nike FuelBank now make it possible to collect a large amount of data about personal activity. Currently, however, these devices quantify only how much of a particular activity is done, but rarely how well the activity is done.
+
+This analysis uses data gathered by Velloso, E., et. al. in their research: [Qualitative Activity Recognition of Weight Lifting Exercises](http://groupware.les.inf.puc-rio.br/har). In this study, six participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E). 
+
+For the purposes of our project, we will explore using Random Forests to predict each class based on several of the variables in the dataset.
+
+###Data Exploration and Cleaning
+
+We need to load first load and subset the data. We will use the Caret package for this analysis.
+
+```{r, warning=FALSE}
+library(caret)
+
+train <- read.csv("pml-training.csv", header=TRUE)
+## Earlier exploration shows the variable new_window with "yes" contain only summary statistics.
+train <- train[train$new_window == "no",]
+
+summary(train)
+```
+
+We see several columns that are fully NA. These appear to be the summary statistics variables. We can remove all these by finding the near zero variance predictor columns. This will also remove any other columns with few unique values that would also be poor predictors.
+
+```{r}
+nzv <- nearZeroVar(train, saveMetrics = TRUE)
+
+keep <- row.names(nzv[nzv[,"zeroVar"] == FALSE,])
+
+train <- train[,keep]
+
+names(train)
+```
+
+We are now down to 59 variables from the original 160. The first 6 columns only contain subject id and timestamps and can also be removed.
+
+
+
