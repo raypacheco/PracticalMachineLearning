@@ -35,5 +35,48 @@ names(train)
 
 We are now down to 59 variables from the original 160. The first 6 columns only contain subject id and timestamps and can also be removed.
 
+```{r}
+train <- train[,-c(1:6)]
+```
 
+###Fitting the Model
+
+Now that the data has been processed we can proceed to splitting the data into two sets.
+
+```{r}
+
+set.seed(1985)
+
+inTrain <- createDataPartition(train$classe, p=0.7, list=FALSE)
+
+training <- train[inTrain,]
+
+testing <- train[-inTrain,]
+
+```
+
+We can now fit our Random Forest model to the training set using cross-validation with 10 folds.
+
+```{r, cache=TRUE}
+
+ctrl <- trainControl(method="cv", number=10)
+
+set.seed(1234)
+modelFit <- train(classe ~ ., data=training, method="rf", trControl=ctrl, prox=TRUE)
+
+modelFit$finalModel
+```
+
+From above we see the final model only used 27 of the 53 variables. The confusion matrix shows very low classification error. We can now apply our model to the test set and get out out of sample error.
+
+```{r}
+prediction <- predict(modelFit, newdata = training)
+
+(sum(prediction != testing$classe)/nrow(testing))*100
+
+confusionMatrix(prediction, testing$classe)
+
+```
+
+###Conclusion
 
